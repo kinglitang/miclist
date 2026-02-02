@@ -6,7 +6,7 @@
 - Apple Music/iTunes 搜索接入
 
 ## 在线访问
-- CloudBase：`https://ktv-0g3hatgjf68b912d-1328339263.tcloudbaseapp.com/ktvai2/`
+- CloudBase：`https://ktv-0g3hatgjf68b912d-1328339263.tcloudbaseapp.com/miclist/ktvai/`
 
 ## 本地使用
 直接打开 `ktvai/index.html` 即可。
