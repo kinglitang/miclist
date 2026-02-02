@@ -5,6 +5,11 @@
 !/
 !ktvai/
 !ktvai/**
+!.github/
+!.github/workflows/
+!.github/workflows/**
+!README.md
+!LICENSE
 
 # Ignore OS / editor noise
 .DS_Store
