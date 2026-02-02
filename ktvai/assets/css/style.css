@@ -1,0 +1,145 @@
+:root {
+  color-scheme: light;
+  --bg: #f2efe8;
+  --surface: #ffffff;
+  --ink: #1f1c1b;
+  --accent: #0e5b8c;
+  --accent-dark: #083555;
+  --muted: #6f6a66;
+  --shadow: 0 18px 45px rgba(15, 16, 20, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Raleway", "Segoe UI", sans-serif;
+  background: radial-gradient(circle at top left, #e6d6c7 0%, #f6f3ef 45%, #eef2f7 100%);
+  color: var(--ink);
+}
+
+.page {
+  min-height: 100vh;
+  padding: 48px 6vw 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.hero {
+  background: var(--surface);
+  border-radius: 28px;
+  padding: 48px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hero__badge {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.hero__title {
+  font-size: clamp(2.8rem, 4vw, 4rem);
+  margin: 0;
+}
+
+.hero__subtitle {
+  font-size: 1.1rem;
+  margin: 0;
+  color: var(--muted);
+  max-width: 480px;
+}
+
+.hero__actions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.btn {
+  border-radius: 999px;
+  padding: 12px 28px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn--primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 12px 30px rgba(14, 91, 140, 0.25);
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: var(--accent-dark);
+  color: var(--accent-dark);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn.is-active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: var(--shadow);
+}
+
+.card h2 {
+  margin-top: 0;
+  font-size: 1.3rem;
+}
+
+.card p {
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding: 32px;
+  }
+
+  .hero__actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}

@@ -1,0 +1,11 @@
+# Ignore everything by default
+*
+
+# Allow the repo root and the ktvai project
+!/
+!ktvai/
+!ktvai/**
+
+# Ignore OS / editor noise
+.DS_Store
+Thumbs.db

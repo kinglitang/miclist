@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>半吊子</title>
+
+  <style>
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:#0f1220;color:#fff;}
+    .wrap{max-width:780px;margin:auto;padding:16px;}
+    h1{font-size:20px;margin:10px 0;}
+    input,button,select{width:100%;padding:12px;margin-top:8px;border-radius:10px;border:none;font-size:15px;box-sizing:border-box;}
+    input,select{background:#1a1f35;color:#fff;}
+    button{background:#3a6cff;color:#fff;cursor:pointer;}
+    button:disabled{opacity:.6;cursor:not-allowed;}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+    .row>*{flex:1 1 180px;}
+    .hint{color:#9aa6c6;font-size:12px;margin-top:6px;line-height:1.6;}
+    .panel{background:#121833;border:1px solid #2c325a;border-radius:12px;padding:10px 12px;margin-top:10px;}
+    .panelHead{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+    .panelTitle{font-size:14px;color:#cdd7ff;margin:0;}
+    .miniBtn{width:auto;padding:8px 10px;font-size:13px;background:#2c325a;border-radius:10px;}
+    .miniBtn.danger{background:#3a2340;}
+    .miniBtn.ok{background:#214b30;}
+
+    .card{background:#1a1f35;border-radius:12px;padding:12px;margin-top:10px;display:flex;gap:10px;align-items:center;}
+    .artLink{flex:0 0 auto;display:block;}
+    .card img{width:56px;height:56px;border-radius:10px;display:block;background:#121833;}
+    .info{flex:1;min-width:0;}
+    .title{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .artist{font-size:13px;color:#aaa;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .line{margin-top:6px;font-size:12px;color:#9aa6c6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+    .badge{padding:3px 8px;border-radius:999px;border:1px solid #2c325a;background:#121833;font-weight:800;color:#cdd7ff;}
+    .badge.heard{color:#cdd7ff;}
+    .badge.sing{color:#bff2c9;border-color:#214b30;background:#132018;}
+    .badge.pro{color:#ffe4b0;border-color:#4b3921;background:#201a12;}
+    .countInline{color:#b9c7ff;font-weight:900;}
+
+    .actions{display:flex;flex-direction:column;gap:8px;align-items:stretch;flex:0 0 110px;position:relative;}
+    .plusWrap{position:relative;display:block;}
+    .plusBtn{width:100%;padding:12px 10px;font-size:14px;border-radius:10px;border:none;background:#3a6cff;color:#fff;font-weight:1000;letter-spacing:.5px;user-select:none;touch-action:manipulation;}
+    .plusBtn:active{transform:scale(0.99);}
+
+    .pop{position:absolute;left:50%;top:-6px;transform:translateX(-50%);font-weight:1000;font-size:14px;color:#b9c7ff;pointer-events:none;opacity:0;animation:popFloat 520ms ease-out forwards;text-shadow:0 6px 18px rgba(0,0,0,.35);}
+    @keyframes popFloat{
+      0%{opacity:0;transform:translateX(-50%) translateY(8px) scale(.9);}
+      20%{opacity:1;transform:translateX(-50%) translateY(0px) scale(1.08);}
+      100%{opacity:0;transform:translateX(-50%) translateY(-18px) scale(1);}
+    }
+
+    hr{border:none;border-top:1px solid #333;margin:16px 0;}
+    .sectionTitleRow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+    .empty{color:#9aa6c6;padding:14px 10px;border:1px dashed #2c325a;border-radius:12px;margin-top:10px;text-align:center;}
+
+    .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(18,24,51,.92);border:1px solid #2c325a;color:#e9eeff;padding:10px 12px;border-radius:999px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;backdrop-filter:blur(10px);transition:opacity 160ms ease, transform 160ms ease;z-index:9999;max-width:92vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+  <h1>半吊子</h1>
+
+  <div class="row">
+    <input id="keyword" placeholder="输入歌名 / 歌手">
+    <button id="searchBtn" onclick="search()">搜索（Apple Music）</button>
+  </div>
+
+  <div class="hint">
+    规则：新加入=新坑(0次)。点 <b>+1</b> 记一次唱歌。<br>
+    达到 <b>5次</b> 自动变「半吊子」，达到 <b>10次</b> 自动变「绝活」。<br>
+    <b>长按 +1</b>：0→5、5→10；<b>熟练时长按</b> 会弹出删除确认。点击封面可跳转到 Apple Music。
+  </div>
+
+  <div id="searchPanel" class="panel" style="display:none;">
+    <div class="panelHead">
+      <p class="panelTitle" id="panelTitle">搜索结果</p>
+      <button class="miniBtn danger" onclick="closeSearch()">关闭</button>
+    </div>
+    <div id="results"></div>
+  </div>
+
+  <hr>
+
+  <div class="sectionTitleRow">
+    <h1 style="margin:0;">我的歌单</h1>
+    <button class="miniBtn" onclick="resetFilters()">清空筛选</button>
+  </div>
+
+  <div class="row">
+    <select id="skillFilter" onchange="render()">
+      <option value="">按状态筛选：全部</option>
+      <option value="heard">新坑</option>
+      <option value="sing">半吊子</option>
+      <option value="pro">绝活</option>
+    </select>
+
+    <select id="sortMode" onchange="render()">
+      <option value="skill">按状态排序（默认）</option>
+      <option value="count">按唱过次数排序</option>
+      <option value="recent">按加入时间排序</option>
+      <option value="name">按歌名排序</option>
+    </select>
+  </div>
+
+  <div id="list"></div>
+
+  <div class="hint" style="margin-top:18px;">
+    <div>网站信息：KTV 歌曲管理 · 云端同步 · 本地缓存</div>
+    <div>拒绝 KTV 点歌综合征：拿手的、要练的、新听的，你的私人歌单管家。</div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  // ========= 配置 =========
+  var ENV_ID = "ktv-0g3hatgjf68b912d";
+  var COLLECTION = "ktv_songbooks";
+  var STORAGE_KEY = "ktv_songs_cloud_cache_v1";
+  var STORAGE_TS_KEY = "ktv_songs_cloud_cache_ts_v1";
+
+
+  // ========= 状态 =========
+  var songs = safeParseArray(localStorage.getItem(STORAGE_KEY));
+  var cloudReady = false;
+  var uid = null;
+
+  var app = null, auth = null, db = null;
+  var saveTimer = null;
+
+  // ========= 工具 =========
+  function loadScript(src){
+    return new Promise(function(resolve,reject){
+      var s=document.createElement("script");
+      s.src=src;
+      s.async=false;
+      s.onload=resolve;
+      s.onerror=function(){reject(new Error("Failed to load: "+src));};
+      document.head.appendChild(s);
+    });
+  }
+
+  function safeParseArray(jsonStr){
+    try{
+      var v = JSON.parse(jsonStr || "[]");
+      return Array.isArray(v) ? v : [];
+    }catch(e){
+      return [];
+    }
+  }
+
+  function showToast(msg){
+    var el=document.getElementById("toast");
+    if(!el) return;
+    el.textContent=msg;
+    el.classList.add("show");
+    clearTimeout(showToast._t);
+    showToast._t=setTimeout(function(){el.classList.remove("show");},1300);
+  }
+
+  function escapeHtml(str){
+    return String(str ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+  function escapeAttr(str){ return escapeHtml(str).replaceAll("\n"," "); }
+
+  function getSkill(count){
+    var c = Number.isFinite(count) ? count : 0;
+    if(c>=10) return {level:2,text:"绝活",cls:"pro"};
+    if(c>=5)  return {level:1,text:"半吊子",cls:"sing"};
+    return {level:0,text:"新坑",cls:"heard"};
+  }
+
+  // ========= 数据保存 =========
+  function save(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.isArray(songs)?songs:[]));
+    localStorage.setItem(STORAGE_TS_KEY, String(Date.now()));
+
+    if(!cloudReady || !uid || !db) return;
+
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(function(){
+      db.collection(COLLECTION).doc(uid).set({
+        songs: Array.isArray(songs)?songs:[],
+        updatedAt: Date.now()
+      }).catch(function(){
+        showToast("云端保存失败，已保存在本机");
+      });
+    },300);
+  }
+
+  // ========= CloudBase 初始化（失败也不影响本地） =========
+  async function initCloud(){
+  try{
+    await loadScript("https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.js");
+    await loadScript("https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.auth.js");
+    await loadScript("https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.database.js");
+
+    if(typeof cloudbase === "undefined") throw new Error("cloudbase not found");
+
+    app = cloudbase.init({ env: ENV_ID });
+    auth = app.auth();
+    db = app.database();
+
+    // ✅ 兼容不同版本 SDK 的匿名登录
+    if (auth && typeof auth.signInAnonymously === "function") {
+      var loginRes = await auth.signInAnonymously();
+      uid = loginRes && loginRes.user ? loginRes.user.uid : (loginRes.uid || null);
+    } else if (auth && auth.anonymousAuthProvider && typeof auth.anonymousAuthProvider === "function") {
+      var loginRes2 = await auth.anonymousAuthProvider().signIn();
+      uid = loginRes2.user.uid;
+    } else {
+      throw new Error("Anonymous auth API not found (SDK mismatch)");
+    }
+
+    if(!uid) throw new Error("Anonymous login succeeded but uid missing");
+    cloudReady = true;
+
+    var ref = db.collection(COLLECTION).doc(uid);
+var res = await ref.get();
+
+// 本地数据（兜底）
+var localSongs = Array.isArray(songs) ? songs : safeParseArray(localStorage.getItem(STORAGE_KEY));
+var localUpdatedAt = Number(localStorage.getItem(STORAGE_TS_KEY) || 0);
+
+// 云端数据（可能不存在/结构不对）
+var cloudData = (res && res.data) ? res.data : null;
+var cloudSongs = (cloudData && Array.isArray(cloudData.songs)) ? cloudData.songs : null;
+var cloudUpdatedAt = (cloudData && Number(cloudData.updatedAt)) ? Number(cloudData.updatedAt) : 0;
+
+// ✅ 同步策略：
+// - 云端有歌单（且更新更“新”）→ 用云端覆盖本地
+// - 云端没有有效歌单，但本地有 → 把本地推上云端（避免“云端空覆盖本地”）
+// - 两边都空 → 创建空 doc 也行
+if (Array.isArray(cloudSongs) && (cloudUpdatedAt >= localUpdatedAt)) {
+  songs = cloudSongs;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(songs));
+  localStorage.setItem(STORAGE_TS_KEY, String(cloudUpdatedAt || Date.now()));
+} else if (Array.isArray(localSongs) && localSongs.length > 0) {
+  songs = localSongs;
+  await ref.set({ songs: songs, updatedAt: Date.now() });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(songs));
+  localStorage.setItem(STORAGE_TS_KEY, String(Date.now()));
+} else {
+  songs = Array.isArray(cloudSongs) ? cloudSongs : [];
+  await ref.set({ songs: songs, updatedAt: Date.now() });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(songs));
+  localStorage.setItem(STORAGE_TS_KEY, String(Date.now()));
+}
+
+render();
+
+    console.log("cloud uid:", uid);
+
+    showToast("云端已连接");
+  }catch(e){
+    cloudReady=false;
+    render();
+    showToast("云端未连接，使用本地数据");
+    console.error("Cloud init failed:", e);
+  }
+}
+
+
+  // ========= UI 逻辑 =========
+  function closeSearch(){
+    document.getElementById("searchPanel").style.display="none";
+    document.getElementById("results").innerHTML="";
+  }
+
+  function resetFilters(){
+    document.getElementById("skillFilter").value="";
+    document.getElementById("sortMode").value="skill";
+    render();
+  }
+
+  async function search(){
+    var q = document.getElementById("keyword").value.trim();
+    if(!q) return;
+    if(!Array.isArray(songs)) songs=[];
+
+    var panel=document.getElementById("searchPanel");
+    var title=document.getElementById("panelTitle");
+    var box=document.getElementById("results");
+    var btn=document.getElementById("searchBtn");
+
+    panel.style.display="block";
+    title.textContent="搜索结果："+q;
+    box.innerHTML='<div class="empty">正在搜索…</div>';
+
+    btn.disabled=true;
+    var oldText=btn.textContent;
+    btn.textContent="搜索中…";
+
+    try{
+      var url="https://itunes.apple.com/search?term="+encodeURIComponent(q)+"&entity=song&limit=12";
+      var res=await fetch(url);
+      if(!res.ok) throw new Error("HTTP "+res.status);
+      var data=await res.json();
+      var results=(data.results||[]);
+      box.innerHTML="";
+
+      if(results.length===0){
+        box.innerHTML='<div class="empty">没搜到～换个关键词试试</div>';
+        return;
+      }
+
+      results.forEach(function(r){
+        var div=document.createElement("div");
+        div.className="card";
+
+        var link=r.trackViewUrl || r.collectionViewUrl || "";
+        var already = Array.isArray(songs) && songs.some(function(s){ return s && s.trackId===r.trackId; });
+
+        div.innerHTML = `
+          <a class="artLink" href="${escapeAttr(link)}" target="_blank" rel="noopener">
+            <img src="${escapeAttr(r.artworkUrl100 || "")}" alt="">
+          </a>
+          <div class="info">
+            <div class="title" title="${escapeAttr(r.trackName)}">${escapeHtml(r.trackName)}</div>
+            <div class="artist">${escapeHtml(r.artistName)}</div>
+            <button class="miniBtn ${already ? "ok" : ""}" style="margin-top:10px;" ${already ? "disabled" : ""}>
+              ${already ? "已加入" : "加入我的歌单"}
+            </button>
+          </div>
+        `;
+
+        var addBtn=div.querySelector("button");
+        addBtn.onclick=function(){
+          if(!Array.isArray(songs)) songs=[];
+          if(songs.some(function(s){return s && s.trackId===r.trackId;})){
+            showToast("这首已经在歌单里啦～");
+            addBtn.textContent="已加入";
+            addBtn.disabled=true;
+            addBtn.classList.add("ok");
+            return;
+          }
+          addSong(r);
+          addBtn.textContent="已加入";
+          addBtn.disabled=true;
+          addBtn.classList.add("ok");
+          showToast("已加入："+r.trackName);
+        };
+
+        box.appendChild(div);
+      });
+
+    }catch(e){
+      console.error("Search failed:", e);
+      box.innerHTML='<div class="empty">搜索失败：网络或接口异常</div>';
+      showToast("搜索失败，请稍后重试");
+    }finally{
+      btn.disabled=false;
+      btn.textContent=oldText;
+    }
+  }
+
+  function addSong(r){
+    if(!Array.isArray(songs)) songs=[];
+    songs.unshift({
+      trackId: r.trackId,
+      name: r.trackName,
+      artist: r.artistName,
+      artwork: r.artworkUrl100 || "",
+      link: r.trackViewUrl || r.collectionViewUrl || "",
+      count: 0,
+      createdAt: Date.now()
+    });
+    save();
+    render();
+  }
+
+  function removeById(trackId){
+    if(!Array.isArray(songs)) songs=[];
+    var idx=songs.findIndex(function(x){ return String(x.trackId)===String(trackId); });
+    if(idx<0) return false;
+    var removed=songs[idx];
+    songs.splice(idx,1);
+    save();
+    render();
+    showToast("已删除："+removed.name);
+    return true;
+  }
+
+  function refreshSkillOptions(){
+    var sel=document.getElementById("skillFilter");
+    var current=sel.value;
+    var options = [
+      { value: "", label: "按状态筛选：全部" },
+      { value: "heard", label: "新坑" },
+      { value: "sing", label: "半吊子" },
+      { value: "pro", label: "绝活" }
+    ];
+    sel.innerHTML = options.map(function(opt){
+      return `<option value="${escapeAttr(opt.value)}">${escapeHtml(opt.label)}</option>`;
+    }).join("");
+    var valid = options.some(function(opt){ return opt.value === current; });
+    sel.value = valid ? current : "";
+  }
+
+  function getViewSongs(){
+    var skillFilter=document.getElementById("skillFilter").value;
+    var view = Array.isArray(songs) ? songs.slice() : [];
+    if(skillFilter){
+      view=view.filter(function(s){
+        return getSkill(s && s.count).cls === skillFilter;
+      });
+    }
+
+    var sortMode=document.getElementById("sortMode").value;
+    if(sortMode==="skill"){
+      view.sort(function(a,b){
+        var as=getSkill(a.count).level, bs=getSkill(b.count).level;
+        if(bs!==as) return bs-as;
+        var ac=a.count||0, bc=b.count||0;
+        if(bc!==ac) return bc-ac;
+        return (b.createdAt||0)-(a.createdAt||0);
+      });
+    }else if(sortMode==="count"){
+      view.sort(function(a,b){return (b.count||0)-(a.count||0);});
+    }else if(sortMode==="recent"){
+      view.sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
+    }else if(sortMode==="name"){
+      view.sort(function(a,b){return String(a.name||"").localeCompare(String(b.name||""),"zh");});
+    }
+    return view;
+  }
+
+  function incrementById(trackId){
+    if(!Array.isArray(songs)) songs=[];
+    var idx=songs.findIndex(function(x){ return String(x.trackId)===String(trackId); });
+    if(idx<0) return;
+    songs[idx].count=(songs[idx].count||0)+1;
+    save();
+    render();
+  }
+
+  function longPressActionById(trackId){
+    if(!Array.isArray(songs)) songs=[];
+    var idx=songs.findIndex(function(x){ return String(x.trackId)===String(trackId); });
+    if(idx<0) return {type:"none",delta:0};
+
+    var before=songs[idx].count||0;
+
+    if(before>=10){
+      var name=songs[idx].name || "这首歌";
+      var ok=confirm("熟练歌曲长按删除：\n\n确定删除「"+name+"」吗？\n（此操作不可撤销）");
+      if(ok){ removeById(trackId); return {type:"delete",delta:0}; }
+      showToast("已取消删除");
+      return {type:"cancel",delta:0};
+    }
+
+    var after=before;
+    if(before<5) after=5;
+    else if(before<10) after=10;
+
+    var delta=Math.max(0, after-before);
+    songs[idx].count=after;
+    save();
+    render();
+    return {type:"jump",delta:delta};
+  }
+
+  function render(){
+    refreshSkillOptions();
+    var box=document.getElementById("list");
+    var view=getViewSongs();
+    box.innerHTML="";
+
+    if(view.length===0){
+      box.innerHTML='<div class="empty">空空的～先去上面搜索一首歌加入吧</div>';
+      return;
+    }
+
+    view.forEach(function(s){
+      var div=document.createElement("div");
+      div.className="card";
+
+      var countNum=Number.isFinite(s.count)?s.count:0;
+      var skill=getSkill(countNum);
+
+      div.innerHTML=`
+        <a class="artLink" href="${escapeAttr(s.link || "")}" target="_blank" rel="noopener">
+          <img src="${escapeAttr(s.artwork || "")}" alt="">
+        </a>
+        <div class="info">
+          <div class="title" title="${escapeAttr(s.name)}">${escapeHtml(s.name)}</div>
+          <div class="artist">${escapeHtml(s.artist || "")}</div>
+          <div class="line">
+            <span class="badge ${skill.cls}">状态：${skill.text}</span>
+            <span class="countInline">· 唱过 ${countNum} 次</span>
+          </div>
+        </div>
+        <div class="actions">
+          <div class="plusWrap">
+            <button class="plusBtn" data-id="${escapeAttr(String(s.trackId))}">+1</button>
+          </div>
+        </div>
+      `;
+      box.appendChild(div);
+    });
+
+    box.querySelectorAll(".plusBtn").forEach(function(btn){
+      var id=btn.dataset.id;
+      var wrap=btn.parentElement;
+
+      var timer=null;
+      var longPressed=false;
+
+      function pop(text){
+        var el=document.createElement("div");
+        el.className="pop";
+        el.textContent=text;
+        wrap.appendChild(el);
+        el.addEventListener("animationend", function(){el.remove();});
+      }
+
+      function start(e){
+        e.preventDefault();
+        longPressed=false;
+        timer=setTimeout(function(){
+          longPressed=true;
+          var result=longPressActionById(id);
+          if(result.type==="jump"){
+            pop("+"+result.delta);
+            try{navigator.vibrate && navigator.vibrate(20);}catch{}
+          }else if(result.type==="delete"){
+            try{navigator.vibrate && navigator.vibrate([20,30,20]);}catch{}
+          }
+        },450);
+      }
+
+      function end(e){
+        e.preventDefault();
+        if(timer) clearTimeout(timer);
+        if(!longPressed){
+          incrementById(id);
+          pop("+1");
+        }
+      }
+
+      btn.addEventListener("pointerdown", start);
+      btn.addEventListener("pointerup", end);
+      btn.addEventListener("pointercancel", function(){ if(timer) clearTimeout(timer); });
+      btn.addEventListener("pointerleave", function(){ if(timer) clearTimeout(timer); });
+    });
+  }
+
+  // 回车搜索
+  document.getElementById("keyword").addEventListener("keydown", function(e){
+    if(e.key==="Enter") search();
+  });
+
+  // 启动：先渲染本地，再尝试云端
+  window.addEventListener("DOMContentLoaded", function(){
+    render();
+    initCloud();
+  });
+</script>
+</body>
+</html>
