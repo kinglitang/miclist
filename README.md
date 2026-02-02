@@ -7,7 +7,6 @@
 
 ## 在线访问
 - CloudBase：`https://ktv-0g3hatgjf68b912d-1328339263.tcloudbaseapp.com/ktvai2/`
-- GitHub Pages：开启后会在 `https://kinglitang.github.io/miclist/`
 
 ## 本地使用
 直接打开 `ktvai/index.html` 即可。
