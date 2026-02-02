@@ -26,4 +26,4 @@ jobs:
           CLOUDBASE_SECRET_KEY: ${{ secrets.CLOUDBASE_SECRET_KEY }}
         run: |
           tcb login --apiKeyId $CLOUDBASE_SECRET_ID --apiKey $CLOUDBASE_SECRET_KEY
-          tcb hosting deploy ktvai -e ktv-0g3hatgjf68b912d
+          tcb hosting deploy ktvai /ktvai2 -e ktv-0g3hatgjf68b912d
